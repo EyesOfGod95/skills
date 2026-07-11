@@ -126,11 +126,18 @@ la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`)
 
 ### Deploy su GitHub Pages
 
-Il workflow `.github/workflows/pages.yml` pubblica EOG a ogni push. Serve **un solo passo manuale**,
-una volta sola: su GitHub apri **Settings → Pages** e imposta **Source: GitHub Actions**.
-Dal push successivo (o rilanciando il workflow da Actions) l'app sarà su
+Il workflow `.github/workflows/pages.yml` pubblica EOG a ogni push e **attiva Pages da solo**
+al primo run (`configure-pages` con `enablement: true`). L'app è su
 `https://eyesofgod95.github.io/skills/` — aprila dal telefono e installala dalla voce
 *Aggiungi a schermata Home*.
+
+## Export & backup
+
+In **⚙ Chiavi & Config → Le tue conversazioni**:
+
+- **Sessione → .md** scarica la conversazione corrente in Markdown leggibile;
+- **Backup → .json** scarica tutte le sessioni;
+- **Importa backup** le ripristina su un altro browser o dispositivo.
 
 ## Roadmap
 
@@ -141,4 +148,5 @@ Dal push successivo (o rilanciando il workflow da Actions) l'app sarà su
 - [x] Wake word ("Ehi EOG") con ascolto continuo
 - [x] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
 - [x] Visione: analisi di foto e schermate dai cervelli multimodali
-- [x] Deploy pubblico su GitHub Pages per installare la PWA dal telefono (resta il passo manuale: Settings → Pages → Source «GitHub Actions»)
+- [x] Deploy pubblico su GitHub Pages per installare la PWA dal telefono (attivazione automatica dal workflow)
+- [x] Export delle conversazioni (Markdown e JSON) con import del backup

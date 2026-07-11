@@ -230,6 +230,13 @@
   .provbox{border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 6px;margin-bottom:14px}
   .provbox h4{margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em}
   .provbox h4 span{font-family:var(--hud);font-size:10px;color:var(--dim);letter-spacing:.14em;margin-left:8px}
+  .exp-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .exp-row button{
+    flex:1;min-width:100px;border:1px solid var(--line);background:var(--panel-2);
+    border-radius:8px;padding:9px 6px;font-family:var(--hud);font-size:10px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--txt);transition:border-color .2s;
+  }
+  .exp-row button:hover{border-color:var(--ciano)}
   .drawer .save{
     width:100%;border:none;border-radius:var(--r);padding:12px;margin-top:6px;
     font-family:var(--hud);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
@@ -393,6 +400,15 @@
     <input type="text" id="proxyUrl" placeholder="http://localhost:8787">
   </div>
   <div id="provForm"></div>
+  <div class="provbox">
+    <h4>Le tue conversazioni <span>export &amp; backup</span></h4>
+    <div class="exp-row">
+      <button type="button" id="expMd">Sessione → .md</button>
+      <button type="button" id="expJson">Backup → .json</button>
+      <button type="button" id="impJson">Importa backup</button>
+    </div>
+    <input type="file" id="jsonInput" accept=".json,application/json" hidden>
+  </div>
   <button class="save" id="saveBtn" type="button">Salva configurazione</button>
 </aside>
 
@@ -728,6 +744,54 @@ async function ask(prompt){
     busy = false; document.getElementById("sendBtn").disabled = false;
   }
 }
+
+/* ── export & backup ── */
+function download(name, text, mime){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type:mime}));
+  a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=> URL.revokeObjectURL(a.href), 3000);
+}
+document.getElementById("expMd").addEventListener("click", ()=>{
+  const lines = ["# EOG — "+conv.title, "",
+                 "_Esportata il "+new Date().toLocaleString("it-IT")+"_", ""];
+  for(const m of conv.messages){
+    lines.push("**"+(m.role==="user" ? "Enrico" : "EOG")+":**", "",
+               textOf(m) + (imgOf(m) ? "\n\n*(immagine allegata)*" : ""), "");
+  }
+  download("eog-sessione.md", lines.join("\n"), "text/markdown");
+});
+document.getElementById("expJson").addEventListener("click", async ()=>{
+  let all = [];
+  try{ all = await withTimeout(DB.all()); }catch(e){}
+  if(conv.messages.length && !all.some(c => c.id === conv.id)) all.push(conv);
+  download("eog-backup.json",
+    JSON.stringify({app:"EOG", exported:new Date().toISOString(), sessions:all}, null, 2),
+    "application/json");
+});
+document.getElementById("impJson").addEventListener("click", ()=>{
+  document.getElementById("jsonInput").click();
+});
+document.getElementById("jsonInput").addEventListener("change", async (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  try{
+    const data = JSON.parse(await f.text());
+    const sessions = Array.isArray(data) ? data : data.sessions;
+    if(!Array.isArray(sessions)) throw new Error("formato non riconosciuto");
+    let n = 0;
+    for(const s of sessions){
+      if(s && s.id && Array.isArray(s.messages)){ await withTimeout(DB.put(s)); n++; }
+    }
+    await refreshSessions();
+    say("eog","Backup importato: "+n+" session"+(n===1?"e":"i")+" ripristinat"+(n===1?"a":"e")+".");
+  }catch(err){
+    say("err","Import non riuscito: "+err.message+".");
+  }finally{
+    e.target.value = "";
+  }
+});
 
 /* ── comandi rapidi ── */
 const COMMANDS = {
