@@ -110,11 +110,27 @@ Scrivendoli nella chat aprono il modulo giusto e copiano il prompt negli appunti
 | `/studio` | NotebookLM |
 | `/aiuto` | elenco comandi |
 
+## Visione 🖼
+
+Il pulsante **🖼** nella console allega una foto o una schermata (ridimensionata a 1024px lato massimo
+per non appesantire la richiesta). In modalità ⚡ Auto l'immagine va da sola a un cervello che vede:
+**Kimi** (con il modello `kimi-latest`) se ha la chiave, altrimenti **Gemma via Ollama** (gemma3 è multimodale).
+Se scegli a mano un cervello senza vista, EOG ti avvisa invece di fallire; nelle richieste successive
+ai cervelli solo-testo l'immagine viene omessa automaticamente.
+
 ## PWA — installala sul telefono
 
 Servita via HTTPS (per esempio con GitHub Pages), EOG è **installabile**: `manifest.webmanifest` + `sw.js`
 la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`), avviabile offline
 (le chiamate AI richiedono comunque la rete). Su Android: menu del browser → *Aggiungi a schermata Home*.
+
+### Deploy su GitHub Pages
+
+Il workflow `.github/workflows/pages.yml` pubblica EOG a ogni push. Serve **un solo passo manuale**,
+una volta sola: su GitHub apri **Settings → Pages** e imposta **Source: GitHub Actions**.
+Dal push successivo (o rilanciando il workflow da Actions) l'app sarà su
+`https://eyesofgod95.github.io/skills/` — aprila dal telefono e installala dalla voce
+*Aggiungi a schermata Home*.
 
 ## Roadmap
 
@@ -124,5 +140,5 @@ la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`)
 - [x] PWA installabile su telefono con l'occhio come icona
 - [x] Wake word ("Ehi EOG") con ascolto continuo
 - [x] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
-- [ ] Visione: analisi di foto e schermate dai cervelli multimodali
-- [ ] Deploy pubblico su GitHub Pages per installare la PWA dal telefono
+- [x] Visione: analisi di foto e schermate dai cervelli multimodali
+- [x] Deploy pubblico su GitHub Pages per installare la PWA dal telefono (resta il passo manuale: Settings → Pages → Source «GitHub Actions»)
