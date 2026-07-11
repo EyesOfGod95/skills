@@ -254,6 +254,7 @@
   <button class="gear icon" id="newSess" title="Nuova sessione" aria-label="Nuova sessione">＋</button>
   <button class="gear icon" id="delSess" title="Elimina sessione corrente" aria-label="Elimina sessione corrente">🗑</button>
   <button class="gear" id="voiceToggle" aria-pressed="false" title="Risposte parlate">🔊 Voce</button>
+  <button class="gear" id="wakeToggle" aria-pressed="false" title="Ascolto continuo: chiamami con «Ehi EOG»">👂 Ehi EOG</button>
   <span class="pill" id="netPill"><span class="dot"></span><span id="netLabel">Nucleo pronto</span></span>
   <button class="gear" id="openSettings" aria-haspopup="dialog">⚙ Chiavi &amp; Config</button>
 </header>
@@ -444,12 +445,44 @@ async function persist(){
 
 /* ── selettore provider ── */
 const sel = document.getElementById("providerSel");
+{
+  const o = document.createElement("option");
+  o.value = "auto"; o.textContent = "⚡ Auto · sceglie EOG";
+  sel.appendChild(o);
+}
 for(const [id,p] of Object.entries(PROVIDERS)){
   const o = document.createElement("option");
   o.value = id; o.textContent = p.label;
   sel.appendChild(o);
 }
-sel.value = cfg.active && PROVIDERS[cfg.active] ? cfg.active : "deepseek";
+sel.value = cfg.active && (PROVIDERS[cfg.active] || cfg.active === "auto") ? cfg.active : "auto";
+
+/* ── instradamento automatico ── */
+function ready(id){
+  const p = PROVIDERS[id];
+  return !p.needsKey || !!(cfg[id] && cfg[id].key);
+}
+function route(q){
+  const t = q.toLowerCase();
+  const has = (...ws)=> ws.some(w => t.includes(w));
+  let want;
+  if(has("cerca","notizie","oggi","ultime","meteo","prezzo","quanto costa","chi ha vinto",
+         "aggiornament","fonti","in tempo reale","classifica","risultati di"))
+    want = "perplexity";                                  // serve il web
+  else if(has("codice","bug","errore","funzione","script","programma","calcola","dimostra",
+              "risolvi","equazione","matematic","algoritmo","passo passo","logica"))
+    want = "deepseekR";                                   // ragionamento e codice
+  else if(q.length > 1500 || has("riassumi","riassunto","analizza questo testo","questo documento"))
+    want = "kimi";                                        // contesto lungo
+  else if(has("offline","in locale","privato","privacy","senza internet"))
+    want = "ollama";                                      // resta sul dispositivo
+  else
+    want = "deepseek";
+  if(ready(want)) return want;
+  // ripiega su un cervello già configurato (Ollama solo se scelto esplicitamente)
+  for(const id of ["deepseek","kimi","perplexity","deepseekR"]) if(ready(id)) return id;
+  return want;
+}
 sel.addEventListener("change", ()=>{ cfg.active = sel.value; store.save(cfg); updatePill(); });
 
 /* ── pannello impostazioni ── */
@@ -492,21 +525,30 @@ document.getElementById("saveBtn").addEventListener("click", ()=>{
 
 /* ── stato ── */
 function updatePill(){
-  const id = sel.value, p = PROVIDERS[id], c = cfg[id]||{};
-  const ready = !p.needsKey || !!c.key;
+  const id = sel.value;
   const pill = document.getElementById("netPill");
-  pill.classList.toggle("offline", !ready);
+  if(id === "auto"){
+    const any = Object.keys(PROVIDERS).some(ready);
+    pill.classList.toggle("offline", !any);
+    document.getElementById("netLabel").textContent =
+      any ? "Auto · EOG sceglie il cervello" : "Auto · nessun cervello configurato";
+    return;
+  }
+  const p = PROVIDERS[id];
+  const ok = ready(id);
+  pill.classList.toggle("offline", !ok);
   document.getElementById("netLabel").textContent =
-    ready ? p.label+" · operativo" : p.label+" · chiave mancante";
+    ok ? p.label+" · operativo" : p.label+" · chiave mancante";
 }
 
 /* ── chat ── */
 const stream = document.getElementById("stream");
-function say(kind, text){
+function say(kind, text, whoOverride){
   const el = document.createElement("div");
   el.className = "msg "+kind;
-  const who = kind==="user" ? "Enrico" : kind==="err" ? "Sistema" : "EOG";
-  el.innerHTML = '<span class="who">'+who+'</span><p></p>';
+  const who = whoOverride || (kind==="user" ? "Enrico" : kind==="err" ? "Sistema" : "EOG");
+  el.innerHTML = '<span class="who"></span><p></p>';
+  el.querySelector(".who").textContent = who;
   el.querySelector("p").textContent = text;
   stream.appendChild(el);
   stream.scrollTop = stream.scrollHeight;
@@ -521,7 +563,9 @@ function endpointFor(p){
 }
 
 async function ask(prompt){
-  const id = sel.value, p = PROVIDERS[id], c = cfg[id]||{};
+  let id = sel.value, routed = false;
+  if(id === "auto"){ id = route(prompt); routed = true; }
+  const p = PROVIDERS[id], c = cfg[id]||{};
   conv.messages.push({role:"user", content:prompt});
   say("user", prompt);
 
@@ -531,7 +575,7 @@ async function ask(prompt){
   }
 
   busy = true; document.getElementById("sendBtn").disabled = true;
-  const out = say("eog","");
+  const out = say("eog","", routed ? "EOG · "+p.label : null);
   out.innerHTML = '<span class="thinking"><i></i><i></i><i></i></span>';
 
   try{
@@ -657,6 +701,7 @@ if(SR){
   let rec = null;
   micBtn.addEventListener("click", ()=>{
     if(rec){ rec.stop(); return; }
+    stopWake();                       // un solo riconoscimento alla volta
     rec = new SR();
     rec.lang = "it-IT"; rec.interimResults = false; rec.maxAlternatives = 1;
     micBtn.classList.add("listen");
@@ -665,12 +710,71 @@ if(SR){
       if(t){ document.getElementById("promptInput").value = t; submitPrompt(); }
     };
     rec.onerror = ()=>{ say("err","Microfono non disponibile o permesso negato."); };
-    rec.onend = ()=>{ micBtn.classList.remove("listen"); rec = null; };
+    rec.onend = ()=>{
+      micBtn.classList.remove("listen"); rec = null;
+      if(cfg.wake) startWake();       // riprendi l'ascolto continuo
+    };
     rec.start();
   });
 }else{
   micBtn.disabled = true;
   micBtn.title = "Dettatura non supportata da questo browser";
+}
+
+/* ── wake word: «Ehi EOG» ── */
+const wakeBtn = document.getElementById("wakeToggle");
+const WAKE_RE = /\b(ehi|hey|ei|ok)[\s,]+(e\s*o\s*g|eog|iog|og)\b/i;
+let wakeRec = null, awaitingCmd = false;
+
+function paintWake(){
+  wakeBtn.classList.toggle("on", !!cfg.wake);
+  wakeBtn.setAttribute("aria-pressed", cfg.wake ? "true" : "false");
+}
+function startWake(){
+  if(!SR || wakeRec || !cfg.wake) return;
+  wakeRec = new SR();
+  wakeRec.lang = "it-IT"; wakeRec.continuous = true; wakeRec.interimResults = false;
+  wakeRec.onresult = (e)=>{
+    const t = e.results[e.results.length-1][0].transcript.trim();
+    if(!t) return;
+    if(awaitingCmd){
+      awaitingCmd = false;
+      document.getElementById("promptInput").value = t;
+      submitPrompt();
+      return;
+    }
+    const m = t.match(WAKE_RE);
+    if(m){
+      const rest = t.slice(m.index + m[0].length).replace(/^[\s,.!?]+/, "").trim();
+      if(rest){ document.getElementById("promptInput").value = rest; submitPrompt(); }
+      else { awaitingCmd = true; speak("Dimmi."); }
+    }
+  };
+  wakeRec.onerror = (e)=>{
+    if(e.error === "not-allowed" || e.error === "service-not-allowed"){
+      cfg.wake = false; store.save(cfg); paintWake();
+      say("err","Permesso microfono negato: ascolto continuo disattivato.");
+    }
+  };
+  wakeRec.onend = ()=>{ wakeRec = null; if(cfg.wake) setTimeout(startWake, 400); };
+  try{ wakeRec.start(); }catch(e){ wakeRec = null; }
+}
+function stopWake(){
+  if(wakeRec){
+    const r = wakeRec; wakeRec = null;
+    try{ r.onend = null; r.stop(); }catch(e){}
+  }
+  awaitingCmd = false;
+}
+if(SR){
+  wakeBtn.addEventListener("click", ()=>{
+    cfg.wake = !cfg.wake; store.save(cfg); paintWake();
+    if(cfg.wake){ speak("Ti ascolto. Chiamami con: Ehi EOG."); startWake(); }
+    else { stopWake(); }
+  });
+}else{
+  wakeBtn.disabled = true;
+  wakeBtn.title = "Riconoscimento vocale non supportato da questo browser";
 }
 
 /* ── sessioni ── */
@@ -701,9 +805,9 @@ function renderHistory(){
 function welcome(){
   say("eog",
     "Occhio aperto. Sono EOG — Eyes of God — il tuo assistente personale.\n" +
-    "Scegli un cervello dal selettore qui sotto (DeepSeek, Kimi, Perplexity o Gemma in locale via Ollama) e inserisci le chiavi API gratuite in «Chiavi & Config».\n" +
+    "In modalità ⚡ Auto scelgo io il cervello giusto: Perplexity per il web, DeepSeek per ragionamento e codice, Kimi per i testi lunghi, Gemma in locale per la privacy. Le chiavi gratuite si inseriscono in «Chiavi & Config».\n" +
     "Comandi rapidi: /immagine, /video, /musica, /diagramma… scrivi /aiuto per l'elenco.\n" +
-    "Le conversazioni si salvano da sole: le ritrovi nel selettore in alto.");
+    "Con 👂 attivo basta dire «Ehi EOG» seguito dalla domanda. Le conversazioni si salvano da sole.");
 }
 
 sessSel.addEventListener("change", async ()=>{
@@ -752,7 +856,8 @@ if("serviceWorker" in navigator && location.protocol.startsWith("http")){
 }
 
 /* ── avvio ── */
-updatePill(); paintVoice();
+updatePill(); paintVoice(); paintWake();
+if(cfg.wake && SR) startWake();
 (async ()=>{
   let restored = false;
   try{

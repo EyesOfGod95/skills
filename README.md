@@ -69,8 +69,25 @@ Le animazioni rispettano `prefers-reduced-motion`.
 
 - **🎙 nella console**: detta il messaggio in italiano (Web Speech API) — al termine parte da solo.
 - **🔊 Voce nella barra in alto**: EOG legge le risposte ad alta voce (sintesi vocale del browser).
+- **👂 Ehi EOG**: ascolto continuo. Di' *«Ehi EOG, che tempo fa a Roma?»* e la domanda parte da sola;
+  se dici solo *«Ehi EOG»*, risponde *«Dimmi»* e aspetta il comando. Si disattiva con lo stesso pulsante.
 
-La dettatura richiede un browser con SpeechRecognition (Chrome/Edge) e il permesso microfono.
+La dettatura e la wake word richiedono un browser con SpeechRecognition (Chrome/Edge) e il permesso microfono.
+
+## Instradamento automatico (⚡ Auto)
+
+In modalità **⚡ Auto** (predefinita) EOG sceglie da solo il cervello più adatto alla domanda:
+
+| La domanda riguarda… | Cervello scelto |
+|---|---|
+| notizie, meteo, prezzi, web in tempo reale | Perplexity Sonar |
+| codice, bug, matematica, ragionamento passo passo | DeepSeek Reasoner |
+| testi lunghi e riassunti (o messaggi > 1500 caratteri) | Kimi K2 |
+| privacy, offline, «in locale» | Gemma via Ollama |
+| tutto il resto | DeepSeek chat |
+
+Se il cervello ideale non ha la chiave configurata, EOG ripiega su uno già pronto;
+il nome del cervello usato compare sull'etichetta della risposta.
 
 ## Memoria
 
@@ -105,5 +122,7 @@ la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`)
 - [x] Memoria persistente delle conversazioni (IndexedDB)
 - [x] Comandi rapidi `/immagine`, `/video`, `/musica` che instradano verso i moduli creativi
 - [x] PWA installabile su telefono con l'occhio come icona
-- [ ] Wake word ("Ehi EOG") con ascolto continuo
-- [ ] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
+- [x] Wake word ("Ehi EOG") con ascolto continuo
+- [x] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
+- [ ] Visione: analisi di foto e schermate dai cervelli multimodali
+- [ ] Deploy pubblico su GitHub Pages per installare la PWA dal telefono
