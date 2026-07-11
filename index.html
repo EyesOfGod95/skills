@@ -2,6 +2,10 @@
 <html lang="it">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06050d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>EOG — Eyes of God</title>
 <style>
   /* ══════════════ EOG · Eyes of God · design tokens ══════════════ */
@@ -65,6 +69,9 @@
     color:var(--txt);transition:border-color .2s;
   }
   .gear:hover{border-color:var(--viola)}
+  .gear.on{border-color:var(--ciano);color:var(--ciano);box-shadow:0 0 12px rgba(82,224,240,.3)}
+  select.gear{max-width:190px;text-transform:none;letter-spacing:.02em}
+  .gear.icon{padding:7px 11px}
   .gear:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
     outline:2px solid var(--ciano);outline-offset:2px;
   }
@@ -175,11 +182,18 @@
   }
   .console .send:hover{filter:brightness(1.12)}
   .console .send:disabled{filter:grayscale(.7) brightness(.6);cursor:wait}
+  .console .mic{
+    border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r);
+    padding:0 13px;font-size:17px;transition:border-color .2s;
+  }
+  .console .mic:hover{border-color:var(--ciano)}
+  .console .mic.listen{border-color:var(--err);box-shadow:0 0 16px rgba(245,109,138,.55);animation:pulse 1.2s ease-in-out infinite}
   @media (max-width:600px){
-    .console{display:grid;grid-template-columns:minmax(0,1fr) auto;padding:12px 14px 18px}
+    .console{display:grid;grid-template-columns:minmax(0,1fr) auto auto;padding:12px 14px 18px}
     .console input[type=text]{grid-row:1;grid-column:1 / -1;padding:11px 13px}
     .console select{grid-row:2;grid-column:1;max-width:none;padding:9px 10px}
-    .console .send{grid-row:2;grid-column:2;padding:10px 18px}
+    .console .mic{grid-row:2;grid-column:2;padding:9px 12px}
+    .console .send{grid-row:2;grid-column:3;padding:10px 18px}
   }
 
   /* ── pannello impostazioni ───────────────────────── */
@@ -236,6 +250,10 @@
     </div>
   </div>
   <div class="spacer"></div>
+  <select class="gear" id="sessSel" aria-label="Sessioni salvate"></select>
+  <button class="gear icon" id="newSess" title="Nuova sessione" aria-label="Nuova sessione">＋</button>
+  <button class="gear icon" id="delSess" title="Elimina sessione corrente" aria-label="Elimina sessione corrente">🗑</button>
+  <button class="gear" id="voiceToggle" aria-pressed="false" title="Risposte parlate">🔊 Voce</button>
   <span class="pill" id="netPill"><span class="dot"></span><span id="netLabel">Nucleo pronto</span></span>
   <button class="gear" id="openSettings" aria-haspopup="dialog">⚙ Chiavi &amp; Config</button>
 </header>
@@ -338,7 +356,8 @@
 
     <form class="console" id="console">
       <select id="providerSel" aria-label="Cervello attivo"></select>
-      <input type="text" id="promptInput" placeholder="Parla con EOG… (Invio per inviare)" autocomplete="off">
+      <input type="text" id="promptInput" placeholder="Parla con EOG… (/aiuto per i comandi)" autocomplete="off">
+      <button class="mic" id="micBtn" type="button" title="Detta con la voce" aria-label="Detta con la voce">🎙</button>
       <button class="send" id="sendBtn" type="submit">Invia</button>
     </form>
   </main>
@@ -378,8 +397,50 @@ const store = {
   save(cfg){ localStorage.setItem("eog-config", JSON.stringify(cfg)); }
 };
 let cfg = store.load();
-let history = [];   // messaggi {role, content}
 let busy = false;
+
+/* ── memoria persistente (IndexedDB) ── */
+function withTimeout(p, ms){
+  return Promise.race([p, new Promise((_,rej)=> setTimeout(()=> rej(new Error("db-timeout")), ms||1500))]);
+}
+const DB = {
+  open(){ return new Promise((res,rej)=>{
+    const r = indexedDB.open("eog", 1);
+    r.onupgradeneeded = ()=> r.result.createObjectStore("conv", {keyPath:"id"});
+    r.onsuccess = ()=> res(r.result);
+    r.onerror = ()=> rej(r.error);
+  });},
+  async put(c){ const db = await this.open(); return new Promise((res,rej)=>{
+    const t = db.transaction("conv","readwrite");
+    t.objectStore("conv").put(c);
+    t.oncomplete = res; t.onerror = ()=> rej(t.error);
+  });},
+  async all(){ const db = await this.open(); return new Promise((res,rej)=>{
+    const q = db.transaction("conv").objectStore("conv").getAll();
+    q.onsuccess = ()=> res(q.result || []); q.onerror = ()=> rej(q.error);
+  });},
+  async del(id){ const db = await this.open(); return new Promise((res,rej)=>{
+    const t = db.transaction("conv","readwrite");
+    t.objectStore("conv").delete(id);
+    t.oncomplete = res; t.onerror = ()=> rej(t.error);
+  });}
+};
+
+function newConv(){
+  return { id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+           ts: Date.now(), title: "Nuova sessione", messages: [] };
+}
+let conv = newConv();
+
+async function persist(){
+  if(!conv.messages.length) return;
+  conv.ts = Date.now();
+  if(conv.title === "Nuova sessione"){
+    conv.title = conv.messages[0].content.slice(0, 42);
+  }
+  try{ await withTimeout(DB.put(conv)); }catch(e){ /* memoria non disponibile */ }
+  refreshSessions();
+}
 
 /* ── selettore provider ── */
 const sel = document.getElementById("providerSel");
@@ -461,12 +522,12 @@ function endpointFor(p){
 
 async function ask(prompt){
   const id = sel.value, p = PROVIDERS[id], c = cfg[id]||{};
-  history.push({role:"user", content:prompt});
+  conv.messages.push({role:"user", content:prompt});
   say("user", prompt);
 
   if(p.needsKey && !c.key){
     say("err","Nessuna API key per "+p.label+". Aprire «Chiavi & Config» in alto a destra: il piano free di questo provider include l'accesso API dopo la registrazione.");
-    history.pop(); return;
+    conv.messages.pop(); return;
   }
 
   busy = true; document.getElementById("sendBtn").disabled = true;
@@ -483,7 +544,7 @@ async function ask(prompt){
       body: JSON.stringify({
         model: c.model || p.model,
         stream: true,
-        messages: [{role:"system", content:SYSTEM_PROMPT}, ...history.slice(-16)]
+        messages: [{role:"system", content:SYSTEM_PROMPT}, ...conv.messages.slice(-16)]
       })
     });
     if(!res.ok) throw new Error("HTTP "+res.status+" — "+(await res.text()).slice(0,200));
@@ -516,7 +577,9 @@ async function ask(prompt){
     if(!full){ // risposta non-streaming o vuota
       out.textContent = "(nessun contenuto ricevuto — verifica modello e chiave)";
     } else {
-      history.push({role:"assistant", content:full});
+      conv.messages.push({role:"assistant", content:full});
+      if(cfg.voice) speak(full);
+      persist();
     }
   }catch(err){
     out.closest(".msg").classList.remove("eog");
@@ -525,27 +588,182 @@ async function ask(prompt){
     out.textContent =
       "Collegamento con "+p.label+" non riuscito ("+err.message+"). " +
       "Se stai aprendo la pagina come anteprima o il provider blocca i CORS, avvia il proxy incluso con `node proxy.mjs`, poi imposta http://localhost:8787 in «Chiavi & Config». Ollama in locale funziona senza proxy con OLLAMA_ORIGINS=*.";
-    history.pop();
+    conv.messages.pop();
   }finally{
     busy = false; document.getElementById("sendBtn").disabled = false;
   }
 }
 
-document.getElementById("console").addEventListener("submit", (e)=>{
-  e.preventDefault();
+/* ── comandi rapidi ── */
+const COMMANDS = {
+  "/immagine":  { tool:"Nano Banana Pro (Google AI Studio)", url:"https://aistudio.google.com" },
+  "/video":     { tool:"Kling AI", url:"https://www.klingai.com" },
+  "/musica":    { tool:"Google Flow · Music", url:"https://labs.google/flow" },
+  "/diagramma": { tool:"Napkin AI", url:"https://www.napkin.ai" },
+  "/montaggio": { tool:"CapCut AI", url:"https://www.capcut.com" },
+  "/ricerca":   { tool:"Perplexity", url:"https://www.perplexity.ai" },
+  "/studio":    { tool:"NotebookLM", url:"https://notebooklm.google.com" }
+};
+
+async function handleCommand(v){
+  say("user", v);
+  const [cmd, ...rest] = v.split(/\s+/);
+  const prompt = rest.join(" ");
+  if(cmd === "/aiuto" || !COMMANDS[cmd]){
+    const list = Object.entries(COMMANDS)
+      .map(([k,c]) => "  "+k+" → "+c.tool).join("\n");
+    say("eog",
+      (COMMANDS[cmd] || cmd === "/aiuto" ? "" : "Comando «"+cmd+"» sconosciuto.\n") +
+      "Comandi rapidi disponibili (aprono il modulo giusto e copiano il prompt):\n" + list +
+      "\n  /aiuto → questo elenco");
+    return;
+  }
+  const c = COMMANDS[cmd];
+  let copied = false;
+  if(prompt){
+    try{ await navigator.clipboard.writeText(prompt); copied = true; }catch(e){}
+  }
+  say("eog", "Apro "+c.tool+"."+(prompt ? (copied
+    ? " Il prompt è già negli appunti: incollalo e genera."
+    : " Copia il prompt qui sopra e incollalo nel modulo.") : ""));
+  window.open(c.url, "_blank", "noopener");
+}
+
+/* ── voce: dettatura + risposte parlate ── */
+function speak(text){
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "it-IT";
+    const it = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("it"));
+    if(it) u.voice = it;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+const voiceBtn = document.getElementById("voiceToggle");
+function paintVoice(){
+  voiceBtn.classList.toggle("on", !!cfg.voice);
+  voiceBtn.setAttribute("aria-pressed", cfg.voice ? "true" : "false");
+}
+voiceBtn.addEventListener("click", ()=>{
+  cfg.voice = !cfg.voice; store.save(cfg); paintVoice();
+  if(cfg.voice) speak("Voce attiva."); else speechSynthesis.cancel();
+});
+
+const micBtn = document.getElementById("micBtn");
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if(SR){
+  let rec = null;
+  micBtn.addEventListener("click", ()=>{
+    if(rec){ rec.stop(); return; }
+    rec = new SR();
+    rec.lang = "it-IT"; rec.interimResults = false; rec.maxAlternatives = 1;
+    micBtn.classList.add("listen");
+    rec.onresult = (e)=>{
+      const t = e.results[0][0].transcript.trim();
+      if(t){ document.getElementById("promptInput").value = t; submitPrompt(); }
+    };
+    rec.onerror = ()=>{ say("err","Microfono non disponibile o permesso negato."); };
+    rec.onend = ()=>{ micBtn.classList.remove("listen"); rec = null; };
+    rec.start();
+  });
+}else{
+  micBtn.disabled = true;
+  micBtn.title = "Dettatura non supportata da questo browser";
+}
+
+/* ── sessioni ── */
+const sessSel = document.getElementById("sessSel");
+
+async function refreshSessions(){
+  let all = [];
+  try{ all = await withTimeout(DB.all()); }catch(e){}
+  all.sort((a,b)=> b.ts - a.ts);
+  if(!all.some(c => c.id === conv.id)) all.unshift(conv);
+  sessSel.innerHTML = "";
+  for(const c of all){
+    const o = document.createElement("option");
+    o.value = c.id;
+    o.textContent = c.title.length > 26 ? c.title.slice(0,26)+"…" : c.title;
+    sessSel.appendChild(o);
+  }
+  sessSel.value = conv.id;
+}
+
+function renderHistory(){
+  stream.innerHTML = "";
+  for(const m of conv.messages){
+    say(m.role === "user" ? "user" : "eog", m.content);
+  }
+}
+
+function welcome(){
+  say("eog",
+    "Occhio aperto. Sono EOG — Eyes of God — il tuo assistente personale.\n" +
+    "Scegli un cervello dal selettore qui sotto (DeepSeek, Kimi, Perplexity o Gemma in locale via Ollama) e inserisci le chiavi API gratuite in «Chiavi & Config».\n" +
+    "Comandi rapidi: /immagine, /video, /musica, /diagramma… scrivi /aiuto per l'elenco.\n" +
+    "Le conversazioni si salvano da sole: le ritrovi nel selettore in alto.");
+}
+
+sessSel.addEventListener("change", async ()=>{
+  await persist();
+  try{
+    const all = await withTimeout(DB.all());
+    const f = all.find(c => c.id === sessSel.value);
+    if(f){ conv = f; renderHistory(); cfg.lastConv = conv.id; store.save(cfg); }
+  }catch(e){}
+});
+
+document.getElementById("newSess").addEventListener("click", async ()=>{
+  await persist();
+  conv = newConv();
+  cfg.lastConv = conv.id; store.save(cfg);
+  stream.innerHTML = ""; welcome();
+  refreshSessions();
+});
+
+document.getElementById("delSess").addEventListener("click", async ()=>{
+  if(!confirm("Eliminare definitivamente questa sessione?")) return;
+  try{ await withTimeout(DB.del(conv.id)); }catch(e){}
+  conv = newConv();
+  cfg.lastConv = conv.id; store.save(cfg);
+  stream.innerHTML = ""; welcome();
+  refreshSessions();
+});
+
+/* ── invio ── */
+function submitPrompt(){
   if(busy) return;
   const inp = document.getElementById("promptInput");
   const v = inp.value.trim();
   if(!v) return;
   inp.value = "";
-  ask(v);
+  if(v.startsWith("/")){ handleCommand(v); return; }
+  ask(v).then(persist);
+}
+document.getElementById("console").addEventListener("submit", (e)=>{
+  e.preventDefault(); submitPrompt();
 });
 
-/* ── benvenuto ── */
-updatePill();
-say("eog",
-  "Occhio aperto. Sono EOG — Eyes of God — il tuo assistente personale.\n" +
-  "Scegli un cervello dal selettore qui sotto (DeepSeek, Kimi, Perplexity o Gemma in locale via Ollama) e inserisci le chiavi API gratuite in «Chiavi & Config».\n" +
-  "I moduli creativi e di studio sono nella colonna a sinistra: un tocco e si aprono.");
+/* ── PWA ── */
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+
+/* ── avvio ── */
+updatePill(); paintVoice();
+(async ()=>{
+  let restored = false;
+  try{
+    if(cfg.lastConv){
+      const all = await withTimeout(DB.all());
+      const f = all.find(c => c.id === cfg.lastConv);
+      if(f && f.messages.length){ conv = f; renderHistory(); restored = true; }
+    }
+  }catch(e){}
+  if(!restored) welcome();
+  refreshSessions();
+})();
 </script>
 </html>

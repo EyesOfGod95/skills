@@ -9,7 +9,7 @@ Tutta l'app è **un solo file HTML** (`index.html`): niente build, niente dipend
 
 1. Apri `index.html` nel browser (doppio clic, oppure `npx serve .` per servirlo in locale).
 2. Clicca **⚙ Chiavi & Config** in alto a destra e inserisci le API key gratuite dei provider che vuoi usare.
-3. Scegli il cervello dal selettore in basso e parla con EOG.
+3. Scegli il cervello dal selettore in basso e parla con EOG — a voce col pulsante 🎙 o scrivendo.
 
 Se un provider blocca le chiamate dirette dal browser (CORS), avvia il mini-proxy incluso:
 
@@ -65,9 +65,45 @@ L'emblema è SVG puro animato in CSS, quindi pesa pochi KB e resta nitido a ogni
 
 Le animazioni rispettano `prefers-reduced-motion`.
 
+## Voce (effetto Jarvis)
+
+- **🎙 nella console**: detta il messaggio in italiano (Web Speech API) — al termine parte da solo.
+- **🔊 Voce nella barra in alto**: EOG legge le risposte ad alta voce (sintesi vocale del browser).
+
+La dettatura richiede un browser con SpeechRecognition (Chrome/Edge) e il permesso microfono.
+
+## Memoria
+
+Le conversazioni si salvano da sole in **IndexedDB** (solo sul tuo dispositivo):
+le ritrovi nel selettore sessioni in alto, con **＋** per iniziarne una nuova e **🗑** per eliminare quella corrente.
+All'apertura EOG riprende l'ultima sessione da dove l'avevi lasciata.
+
+## Comandi rapidi
+
+Scrivendoli nella chat aprono il modulo giusto e copiano il prompt negli appunti:
+
+| Comando | Modulo |
+|---|---|
+| `/immagine <prompt>` | Nano Banana Pro (Google AI Studio) |
+| `/video <prompt>` | Kling AI |
+| `/musica <prompt>` | Google Flow · Music |
+| `/diagramma <prompt>` | Napkin AI |
+| `/montaggio` | CapCut AI |
+| `/ricerca <prompt>` | Perplexity |
+| `/studio` | NotebookLM |
+| `/aiuto` | elenco comandi |
+
+## PWA — installala sul telefono
+
+Servita via HTTPS (per esempio con GitHub Pages), EOG è **installabile**: `manifest.webmanifest` + `sw.js`
+la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`), avviabile offline
+(le chiamate AI richiedono comunque la rete). Su Android: menu del browser → *Aggiungi a schermata Home*.
+
 ## Roadmap
 
-- [ ] Input vocale (Web Speech API) e risposta parlata, per il vero effetto Jarvis
-- [ ] Memoria persistente delle conversazioni (IndexedDB)
-- [ ] Comandi rapidi `/immagine`, `/video`, `/musica` che instradano verso i moduli creativi
-- [ ] PWA installabile su telefono con l'occhio come icona
+- [x] Input vocale (Web Speech API) e risposta parlata, per il vero effetto Jarvis
+- [x] Memoria persistente delle conversazioni (IndexedDB)
+- [x] Comandi rapidi `/immagine`, `/video`, `/musica` che instradano verso i moduli creativi
+- [x] PWA installabile su telefono con l'occhio come icona
+- [ ] Wake word ("Ehi EOG") con ascolto continuo
+- [ ] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
