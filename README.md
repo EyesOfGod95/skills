@@ -1,7 +1,10 @@
 # ◉ EOG — Eyes of God
 
 Assistente personale in stile **Jarvis**, con interfaccia HUD scura viola/ciano e il logo animato:
-un **occhio che si apre e si chiude dentro un esagono**, circondato da anelli di telemetria rotanti.
+un **occhio realistico nel nucleo di un atomo**, con elettroni in orbita e una pioggia di dati
+stile Matrix sullo sfondo.
+
+**Online su https://eyesofgod95.github.io** — apribile dal telefono e installabile come app.
 
 Tutta l'app è **un solo file HTML** (`index.html`): niente build, niente dipendenze, si apre nel browser.
 
@@ -58,10 +61,11 @@ Ogni modulo si apre con un tocco nella scheda corrispondente (piani gratuiti).
 
 L'emblema è SVG puro animato in CSS, quindi pesa pochi KB e resta nitido a ogni dimensione:
 
-- **battito di palpebre** ogni ~5,5 s (`scaleY` sul gruppo dell'occhio);
-- **pupilla** che pulsa lentamente;
-- **due anelli** tratteggiati che ruotano in direzioni opposte;
-- **esagono** con gradiente viola → magenta → ciano, come nel mood di riferimento.
+- **occhio realistico** come nucleo: sclera a mandorla, iride striata, riflessi, battito di
+  palpebre ogni ~5,5 s (`scaleY`) e pupilla che pulsa;
+- **tre orbite ellittiche** con gradiente viola → magenta → ciano e **elettroni** che le
+  percorrono a velocità diverse (`animateMotion`);
+- dietro, una **pioggia di dati stile Matrix** su canvas, sfumata ai bordi.
 
 Le animazioni rispettano `prefers-reduced-motion`.
 
@@ -108,6 +112,7 @@ Scrivendoli nella chat aprono il modulo giusto e copiano il prompt negli appunti
 | `/montaggio` | CapCut AI |
 | `/ricerca <prompt>` | Perplexity |
 | `/studio` | NotebookLM |
+| `/jspace` | J-Space Orbital (simulatore in-app) |
 | `/aiuto` | elenco comandi |
 
 ## Visione 🖼
@@ -118,18 +123,47 @@ per non appesantire la richiesta). In modalità ⚡ Auto l'immagine va da sola a
 Se scegli a mano un cervello senza vista, EOG ti avvisa invece di fallire; nelle richieste successive
 ai cervelli solo-testo l'immagine viene omessa automaticamente.
 
+## J-Space Orbital 🛰
+
+Pulsante **🛰 J-Space** nella barra in alto (o comando `/jspace`): un simulatore di
+**data center in orbita** costruito sulle equazioni vere — costante solare 1361 W/m²,
+radiatori a ~505 W/m² (`εσT⁴`, nel vuoto si irraggia soltanto), 700 W per acceleratore.
+
+Muovi i cursori (satelliti, acceleratori, dato grezzo, downlink, **livello di frontiera**)
+e vedi in tempo reale potenza, metri quadri di pannelli e radiatori, massa in orbita,
+quanto elabori lassù e quanto devi far scendere a terra. Il **rapporto olografico** dice
+quanti bit elabori in orbita per ogni bit sceso: alzando la frontiera il canale regge,
+abbassandola satura.
+
+Il pannello **The Handshake** risponde alla domanda "e se un giorno vuoi spegnerla?":
+il calcolo prosegue solo finché arrivano heartbeat firmati da terra, altrimenti la
+costellazione si sospende da sola.
+
+L'analisi completa è in [docs/j-space-orbital.md](docs/j-space-orbital.md), il documento
+teorico di riferimento in [docs/the-gad-eyes.md](docs/the-gad-eyes.md).
+
 ## PWA — installala sul telefono
 
 Servita via HTTPS (per esempio con GitHub Pages), EOG è **installabile**: `manifest.webmanifest` + `sw.js`
-la rendono un'app standalone con **l'occhio nell'esagono come icona** (`icons/`), avviabile offline
+la rendono un'app standalone con **l'occhio nell'atomo come icona** (`icons/`), avviabile offline
 (le chiamate AI richiedono comunque la rete). Su Android: menu del browser → *Aggiungi a schermata Home*.
 
 ### Deploy su GitHub Pages
 
-Il workflow `.github/workflows/pages.yml` pubblica EOG a ogni push e **attiva Pages da solo**
-al primo run (`configure-pages` con `enablement: true`). L'app è su
-`https://eyesofgod95.github.io/skills/` — aprila dal telefono e installala dalla voce
-*Aggiungi a schermata Home*.
+Il sito pubblico vive nel repository **`EyesOfGod95/eyesofgod95.github.io`**: GitHub pubblica
+da solo i repository che portano il nome `<utente>.github.io`, senza impostazioni da toccare.
+Per mandare online una modifica basta copiare i file dell'app in quel repository e pushare su
+`main`:
+
+```bash
+cp index.html sw.js manifest.webmanifest README.md ../eyesofgod95.github.io/
+cp icons/*.png ../eyesofgod95.github.io/icons/
+cd ../eyesofgod95.github.io && git add -A && git commit -m "aggiornamento" && git push origin main
+```
+
+In un paio di minuti l'app aggiornata è su **https://eyesofgod95.github.io** — aprila dal
+telefono e installala dalla voce *Aggiungi a schermata Home*. Questo repository resta quello
+di sviluppo e di storia del progetto.
 
 ## Export & backup
 
@@ -148,5 +182,6 @@ In **⚙ Chiavi & Config → Le tue conversazioni**:
 - [x] Wake word ("Ehi EOG") con ascolto continuo
 - [x] Instradamento automatico: EOG sceglie da solo il cervello più adatto alla domanda
 - [x] Visione: analisi di foto e schermate dai cervelli multimodali
+- [x] J-Space Orbital: simulatore di data center in orbita col bilancio di frontiera
 - [x] Deploy pubblico su GitHub Pages per installare la PWA dal telefono (attivazione automatica dal workflow)
 - [x] Export delle conversazioni (Markdown e JSON) con import del backup

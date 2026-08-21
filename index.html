@@ -250,6 +250,78 @@
   }
   .scrim{position:fixed;inset:0;background:rgba(4,3,10,.55);z-index:40;opacity:0;pointer-events:none;transition:opacity .25s}
   .scrim.on{opacity:1;pointer-events:auto}
+  /* ── J-Space Orbital ─────────────────────────────── */
+  .jspace{position:fixed;inset:0;z-index:60;background:var(--void);display:none;flex-direction:column}
+  .jspace.open{display:flex}
+  .js-top{
+    display:flex;align-items:center;gap:12px;padding:11px 18px;flex:none;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(19,16,36,.95),rgba(13,11,26,.8));
+  }
+  .js-top h2{
+    margin:0;font-family:var(--hud);font-size:13px;letter-spacing:.28em;text-transform:uppercase;
+    background:linear-gradient(90deg,var(--viola),var(--magenta) 55%,var(--ciano));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .js-top .sub{font-family:var(--hud);font-size:9.5px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+  .js-top .spacer{flex:1}
+  .js-body{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 390px;min-height:0}
+  @media (max-width:980px){
+    .js-body{grid-template-columns:1fr;grid-template-rows:minmax(210px,34vh) minmax(0,1fr)}
+  }
+  .js-stage{position:relative;min-height:0;overflow:hidden}
+  .js-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .js-badge{
+    position:absolute;left:14px;top:12px;z-index:2;display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--hud);font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:999px;padding:5px 12px;background:rgba(6,5,13,.72);
+  }
+  .js-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .js-badge.down{border-color:rgba(245,109,138,.5);color:var(--err)}
+  .js-badge.down .dot{background:var(--err);box-shadow:0 0 8px var(--err)}
+  .js-panel{border-left:1px solid var(--line);overflow-y:auto;padding:16px 18px 34px;min-height:0}
+  @media (max-width:980px){.js-panel{border-left:0;border-top:1px solid var(--line)}}
+  .js-panel h3{
+    margin:18px 0 10px;font-family:var(--hud);font-size:10px;font-weight:600;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:8px;
+  }
+  .js-panel h3:first-child{margin-top:0}
+  .js-panel h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  .ctl{margin-bottom:12px}
+  .ctl label{
+    display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+    font-size:12.5px;color:var(--txt);margin-bottom:5px;
+  }
+  .ctl label b{font-family:var(--hud);font-size:12px;color:var(--ciano);font-weight:600;font-variant-numeric:tabular-nums}
+  .ctl input[type=range]{width:100%;accent-color:var(--viola);background:transparent}
+  .ctl .hint{display:block;font-size:11px;color:var(--dim);margin-top:3px;line-height:1.4}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .tile{border:1px solid var(--line);border-radius:var(--r);padding:9px 11px;background:rgba(19,16,36,.5)}
+  .tile span{
+    display:block;font-family:var(--hud);font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--dim);margin-bottom:3px;
+  }
+  .tile b{display:block;font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+  .tile.wide{grid-column:1 / -1}
+  .tile.hero b{font-size:26px;background:linear-gradient(90deg,var(--ciano),var(--viola));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .tile small{display:block;font-size:11px;color:var(--dim);margin-top:3px}
+  .verdict{border-radius:var(--r);padding:11px 13px;margin-top:11px;font-size:13px;line-height:1.5;border:1px solid}
+  .verdict.ok{border-color:rgba(94,232,164,.45);background:rgba(94,232,164,.08)}
+  .verdict.ko{border-color:rgba(245,109,138,.45);background:rgba(245,109,138,.08)}
+  .verdict b{display:block;font-family:var(--hud);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px}
+  .verdict.ok b{color:var(--ok)} .verdict.ko b{color:var(--err)}
+  .beat{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .beat button{
+    border:none;border-radius:var(--r);padding:11px 15px;font-family:var(--hud);font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--void);
+    background:linear-gradient(135deg,var(--ciano),var(--viola));white-space:nowrap;
+  }
+  .beat .bar{flex:1;height:8px;border-radius:999px;background:var(--panel-2);border:1px solid var(--line);overflow:hidden}
+  .beat .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--ciano));transition:width .4s linear}
+  .beat .bar i.low{background:linear-gradient(90deg,var(--err),var(--warn))}
+  .js-note{font-size:11.5px;color:var(--dim);line-height:1.55;margin:10px 0 0}
+  .js-note code{color:var(--ciano);font-family:var(--hud);font-size:11px}
 </style>
 
 <header class="top">
@@ -285,6 +357,7 @@
   <button class="gear" id="voiceToggle" aria-pressed="false" title="Risposte parlate">🔊 Voce</button>
   <button class="gear" id="wakeToggle" aria-pressed="false" title="Ascolto continuo: chiamami con «Ehi EOG»">👂 Ehi EOG</button>
   <span class="pill" id="netPill"><span class="dot"></span><span id="netLabel">Nucleo pronto</span></span>
+  <button class="gear" id="openJspace" title="Simulatore data center orbitale">🛰 J-Space</button>
   <button class="gear" id="openSettings" aria-haspopup="dialog">⚙ Chiavi &amp; Config</button>
 </header>
 
@@ -449,6 +522,100 @@
   </div>
   <button class="save" id="saveBtn" type="button">Salva configurazione</button>
 </aside>
+
+<!-- ══════════ J-SPACE ORBITAL ══════════ -->
+<section class="jspace" id="jspace" role="dialog" aria-label="J-Space Orbital" aria-modal="true">
+  <header class="js-top">
+    <div>
+      <h2>J-Space Orbital</h2>
+      <div class="sub">Simulatore di frontiera · data center in orbita</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="gear" id="jsClose">✕ Chiudi</button>
+  </header>
+
+  <div class="js-body">
+    <div class="js-stage">
+      <span class="js-badge" id="jsState"><span class="dot"></span><span id="jsStateTxt">Costellazione operativa</span></span>
+      <canvas id="jsCv" aria-label="Costellazione orbitale: satelliti, collegamenti ottici e canale verso terra"></canvas>
+    </div>
+
+    <div class="js-panel">
+      <h3>Frontiera</h3>
+      <div class="tiles">
+        <div class="tile hero wide">
+          <span>Rapporto olografico</span>
+          <b id="tR">—</b>
+          <small>bit elaborati in orbita per ogni bit sceso a terra</small>
+        </div>
+      </div>
+      <div class="ctl" style="margin-top:11px">
+        <label for="jsFront">Livello di frontiera <b id="vFront">50%</b></label>
+        <input type="range" id="jsFront" min="0" max="100" value="50">
+        <span class="hint">A 0 scarichi il volume grezzo. Salendo, in orbita resta il calcolo e a terra scende solo il risultato: latenti, delta, decisioni.</span>
+      </div>
+
+      <h3>Costellazione</h3>
+      <div class="ctl">
+        <label for="jsN">Satelliti <b id="vN">81</b></label>
+        <input type="range" id="jsN" min="2" max="200" value="81">
+        <span class="hint">Project Suncatcher ipotizza 81 satelliti entro 1 km di raggio.</span>
+      </div>
+      <div class="ctl">
+        <label for="jsAcc">Acceleratori per satellite <b id="vAcc">8</b></label>
+        <input type="range" id="jsAcc" min="1" max="64" value="8">
+      </div>
+      <div class="ctl">
+        <label for="jsRaw">Dato grezzo per acceleratore <b id="vRaw">2 Gbps</b></label>
+        <input type="range" id="jsRaw" min="1" max="200" value="20">
+        <span class="hint">Quanto materiale ogni acceleratore macina al secondo.</span>
+      </div>
+
+      <h3>Canale verso terra</h3>
+      <div class="ctl">
+        <label for="jsDown">Downlink ottico per satellite <b id="vDown">10 Gbps</b></label>
+        <input type="range" id="jsDown" min="1" max="200" value="10">
+      </div>
+      <div class="ctl">
+        <label for="jsAvail">Disponibilità del link <b id="vAvail">70%</b></label>
+        <input type="range" id="jsAvail" min="30" max="98" value="70">
+        <span class="hint">Nuvole e finestre di visibilità della stazione di terra.</span>
+      </div>
+
+      <h3>Bilancio di superficie</h3>
+      <div class="tiles">
+        <div class="tile"><span>Potenza di calcolo</span><b id="tP">—</b></div>
+        <div class="tile"><span>Pannelli solari</span><b id="tPv">—</b></div>
+        <div class="tile"><span>Radiatori</span><b id="tRad">—</b><small id="tRadSat">—</small></div>
+        <div class="tile"><span>Massa in orbita</span><b id="tMass">—</b></div>
+        <div class="tile"><span>Elaborato in orbita</span><b id="tVol">—</b></div>
+        <div class="tile"><span>Da scaricare</span><b id="tDown">—</b><small id="tCap">—</small></div>
+      </div>
+      <div class="verdict ok" id="tVerdict"><b>—</b><span id="tVerdictTxt">—</span></div>
+      <p class="js-note" id="tCost">—</p>
+
+      <h3>The Handshake</h3>
+      <p class="js-note">
+        "E se un giorno vuoi spegnerla?" — il calcolo prosegue solo finché arriva un heartbeat
+        firmato da terra. Se tace, la costellazione sospende da sola: lo stato predefinito è
+        <code>spento</code>, non acceso.
+      </p>
+      <div class="beat">
+        <button type="button" id="jsBeat">◉ Invia heartbeat</button>
+        <span class="bar"><i id="jsBeatBar" style="width:100%"></i></span>
+      </div>
+
+      <h3>Come leggerlo</h3>
+      <p class="js-note">
+        Il modello usa fisica reale: costante solare <code>1361 W/m²</code>, celle al
+        <code>30%</code>, radiatori che smaltiscono <code>~505 W/m²</code> a 320 K
+        (<code>εσT⁴</code>, nel vuoto si irraggia soltanto). Quindi energia, calore e banda
+        dipendono da tre <b>aree</b>: in orbita il limite è la superficie, non il volume.
+        Le cifre sono ordini di grandezza per ragionare, non un progetto di volo.
+      </p>
+    </div>
+  </div>
+</section>
 
 <script>
 /* ═══════════════ EOG · router multi-cervello ═══════════════ */
@@ -846,13 +1013,17 @@ async function handleCommand(v){
   say("user", v);
   const [cmd, ...rest] = v.split(/\s+/);
   const prompt = rest.join(" ");
+  if(cmd === "/jspace"){
+    if(window.eogJSpace){ window.eogJSpace(); say("eog","Apro J-Space Orbital: la costellazione, il bilancio di superficie e il rapporto olografico."); }
+    return;
+  }
   if(cmd === "/aiuto" || !COMMANDS[cmd]){
     const list = Object.entries(COMMANDS)
       .map(([k,c]) => "  "+k+" → "+c.tool).join("\n");
     say("eog",
       (COMMANDS[cmd] || cmd === "/aiuto" ? "" : "Comando «"+cmd+"» sconosciuto.\n") +
       "Comandi rapidi disponibili (aprono il modulo giusto e copiano il prompt):\n" + list +
-      "\n  /aiuto → questo elenco");
+      "\n  /jspace → J-Space Orbital (simulatore orbitale)\n  /aiuto → questo elenco");
     return;
   }
   const c = COMMANDS[cmd];
@@ -1099,5 +1270,238 @@ if(cfg.wake && SR) startWake();
   if(!restored) welcome();
   refreshSessions();
 })();
+
+/* ══════════ J-Space Orbital — simulatore di frontiera ══════════
+   Compute nel volume, trasmetti solo la frontiera: in orbita energia,
+   calore e banda dipendono da tre aree, non dal volume di hardware.   */
+(function(){
+  const S_SOL = 1361;          // costante solare, W/m²
+  const ETA   = .30;           // rendimento celle triplo-giunzione
+  const SIGMA = 5.67e-8, EPS = .85, T_RAD = 320;
+  const Q_RAD = EPS * SIGMA * Math.pow(T_RAD, 4);   // ~505 W per m² di radiatore
+  const P_ACC = 700;           // W per acceleratore
+  const USO   = .8;            // quota del solare che arriva al calcolo
+  const BEAT_MAX = 20;         // secondi di autonomia senza heartbeat
+
+  const $ = id => document.getElementById(id);
+  const panel = $("jspace");
+  if(!panel) return;
+  const cv = $("jsCv"), ctx = cv.getContext("2d");
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let aperto = false, viva = true, beat = BEAT_MAX, raf = null, tick = null;
+
+  const nf = (v, d) => v.toLocaleString("it-IT", {minimumFractionDigits:d, maximumFractionDigits:d});
+  function watt(w){
+    if(w >= 1e9) return nf(w/1e9,2)+" GW";
+    if(w >= 1e6) return nf(w/1e6,1)+" MW";
+    if(w >= 1e3) return nf(w/1e3,1)+" kW";
+    return Math.round(w)+" W";
+  }
+  function bps(g){
+    if(g >= 1000) return nf(g/1000,2)+" Tbps";
+    if(g >= 1)    return nf(g,1)+" Gbps";
+    if(g >= .001) return nf(g*1000,1)+" Mbps";
+    return nf(g*1e6,0)+" kbps";
+  }
+  function area(m2){
+    if(m2 >= 1e6) return nf(m2/1e6,2)+" km²";
+    if(m2 >= 1e4) return nf(m2/1e4,2)+" ettari";
+    return nf(m2,0)+" m²";
+  }
+  function ratio(r){
+    if(r >= 1e5) return "10" + String(Math.round(Math.log10(r))).replace(/\d/g, d => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]) + "×";
+    if(r >= 1000) return nf(r/1000,1)+"·10³×";
+    return nf(r,0)+"×";
+  }
+
+  let stato = {N:81, acc:8, dVol:0, viva:true};
+
+  function calcola(){
+    const N     = +$("jsN").value,
+          acc   = +$("jsAcc").value,
+          raw   = +$("jsRaw").value,
+          down  = +$("jsDown").value,
+          avail = +$("jsAvail").value/100,
+          f     = +$("jsFront").value/100;
+
+    $("vN").textContent = N;
+    $("vAcc").textContent = acc;
+    $("vRaw").textContent = raw+" Gbps";
+    $("vDown").textContent = down+" Gbps";
+    $("vAvail").textContent = Math.round(avail*100)+"%";
+    $("vFront").textContent = Math.round(f*100)+"%";
+
+    const pCalc  = viva ? N*acc*P_ACC : 0;
+    const pSol   = pCalc/USO;
+    const aPv    = pSol/(S_SOL*ETA);
+    const aRad   = pCalc/Q_RAD;
+    const dVol   = viva ? N*acc*raw : 0;              // Gbps grezzi
+    const R      = Math.pow(10, 6*f);                 // rapporto olografico
+    const dDown  = dVol/R;
+    const bDown  = N*down*avail;
+    const massa  = N*(180 + acc*6) + aPv*2.5 + aRad*3;   // kg, ordine di grandezza
+    const costo  = massa*200/1e6;                        // M$ a 200 $/kg (proiezione anni '30)
+
+    $("tR").textContent   = ratio(R);
+    $("tP").textContent   = watt(pCalc);
+    $("tPv").textContent  = area(aPv);
+    $("tRad").textContent = area(aRad);
+    $("tRadSat").textContent = viva ? nf(aRad/N,0)+" m² per satellite" : "in attesa di heartbeat";
+    $("tMass").textContent = nf(massa/1000,1)+" t";
+    $("tVol").textContent = bps(dVol);
+    $("tDown").textContent = bps(dDown);
+    $("tCap").textContent = "capacità " + bps(bDown);
+    $("tCost").innerHTML  = "Lancio stimato <b>" + nf(costo,0) + " M$</b> a 200 $/kg, la proiezione di Google per metà anni '30; ai prezzi di oggi va moltiplicato per dieci.";
+
+    const v = $("tVerdict"), ok = dDown <= bDown;
+    v.className = "verdict " + (ok ? "ok" : "ko");
+    v.querySelector("b").textContent = !viva ? "Costellazione sospesa"
+                                     : ok ? "Frontiera sostenibile" : "Frontiera satura";
+    $("tVerdictTxt").textContent = !viva
+      ? "Nessun heartbeat: il calcolo è fermo e restano attivi solo housekeeping e telemetria."
+      : ok
+        ? "Serve " + bps(dDown) + " di canale e ne hai " + bps(bDown) + ": il margine è "
+          + nf(bDown/Math.max(dDown,1e-9),1) + "×. Il collo di bottiglia ora è il calore: "
+          + nf(aRad/N,0) + " m² di radiatore per satellite."
+        : "Servirebbero " + bps(dDown) + " ma il canale ne regge " + bps(bDown)
+          + ". Alza il livello di frontiera — elabora in orbita e manda giù il risultato, non il grezzo — oppure riduci il dato grezzo.";
+
+    stato = {N:N, acc:acc, dVol:dVol, viva:viva, saturo:!ok};
+  }
+
+  /* ── heartbeat: il calcolo vive solo se la terra risponde ── */
+  function pittaBeat(){
+    const p = Math.max(0, beat/BEAT_MAX);
+    const bar = $("jsBeatBar");
+    bar.style.width = (p*100)+"%";
+    bar.classList.toggle("low", p < .35);
+    const badge = $("jsState");
+    badge.classList.toggle("down", !viva);
+    $("jsStateTxt").textContent = viva
+      ? "Costellazione operativa"
+      : "Calcolo sospeso · in attesa di heartbeat";
+  }
+  $("jsBeat").addEventListener("click", ()=>{
+    beat = BEAT_MAX;
+    if(!viva){ viva = true; }
+    pittaBeat(); calcola();
+  });
+  function avvia(){
+    if(tick) return;
+    tick = setInterval(()=>{
+      if(!aperto) return;
+      beat -= 1;
+      if(beat <= 0){ beat = 0; if(viva){ viva = false; calcola(); } }
+      pittaBeat();
+    }, 1000);
+  }
+
+  /* ── scena: Terra, sciame orbitale, canale di frontiera ── */
+  let glifi = [];
+  function ridimensiona(){ cv.width = cv.offsetWidth; cv.height = cv.offsetHeight; }
+  function disegna(ts){
+    if(aperto && !REDUCED) raf = requestAnimationFrame(disegna);
+    const W = cv.width, H = cv.height;
+    if(!W || !H) return;
+    const t = (ts||0)/1000;
+
+    ctx.clearRect(0,0,W,H);
+    const sfondo = ctx.createRadialGradient(W/2, H*.42, 10, W/2, H*.42, Math.max(W,H)*.7);
+    sfondo.addColorStop(0, "rgba(160,107,250,.10)");
+    sfondo.addColorStop(1, "rgba(6,5,13,0)");
+    ctx.fillStyle = sfondo; ctx.fillRect(0,0,W,H);
+
+    // Terra
+    const eR = Math.max(W,H)*.9, eX = W/2, eY = H + eR*.72;
+    const terra = ctx.createRadialGradient(eX-eR*.3, eY-eR*.55, eR*.05, eX, eY, eR);
+    terra.addColorStop(0, "#2b5f8f"); terra.addColorStop(.55, "#173a63"); terra.addColorStop(1, "#0a1730");
+    ctx.beginPath(); ctx.arc(eX, eY, eR, 0, 7); ctx.fillStyle = terra; ctx.fill();
+    ctx.beginPath(); ctx.arc(eX, eY, eR+2, Math.PI, 2*Math.PI);
+    ctx.strokeStyle = "rgba(82,224,240,.45)"; ctx.lineWidth = 2.5; ctx.stroke();
+
+    // orbita
+    const hor = eY - eR;                       // linea d'orizzonte
+    const oX = W/2, oY = Math.max(34, hor*.52), rx = W*.40,
+          ry = Math.min(H*.26, Math.max(22, hor*.36));   // la costellazione resta sopra l'orizzonte
+    ctx.beginPath(); ctx.ellipse(oX, oY, rx, ry, 0, 0, 7);
+    ctx.strokeStyle = "rgba(160,107,250,.28)"; ctx.lineWidth = 1.2; ctx.setLineDash([4,7]); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // satelliti
+    const N = Math.min(stato.N, 120), giro = REDUCED ? 0 : t*.12;
+    const pos = [];
+    for(let i=0;i<N;i++){
+      const a = (i/N)*Math.PI*2 + giro;
+      pos.push([oX + Math.cos(a)*rx, oY + Math.sin(a)*ry, Math.sin(a)]);
+    }
+    // collegamenti ottici tra vicini
+    if(stato.viva){
+      ctx.lineWidth = 1;
+      for(let i=0;i<N;i++){
+        const a = pos[i], b = pos[(i+1)%N];
+        ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]);
+        ctx.strokeStyle = "rgba(82,224,240," + (.10 + .16*(a[2]+1)/2) + ")"; ctx.stroke();
+      }
+    }
+    for(let i=0;i<N;i++){
+      const [x,y,d] = pos[i], s = 2.4 + 1.6*(d+1)/2;
+      ctx.beginPath(); ctx.arc(x, y, s, 0, 7);
+      ctx.fillStyle = stato.viva ? (i%9===0 ? "#e964d8" : "#52e0f0") : "rgba(125,118,168,.75)";
+      ctx.shadowColor = stato.viva ? "#52e0f0" : "transparent"; ctx.shadowBlur = stato.viva ? 8 : 0;
+      ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    // stazione di terra e canale di frontiera
+    const gX = W*.5, gY = eY - eR;
+    const sorgente = pos.reduce((m,p) => p[1] > m[1] ? p : m, pos[0] || [oX,oY,0]);
+    if(stato.viva){
+      ctx.beginPath(); ctx.moveTo(sorgente[0], sorgente[1]); ctx.lineTo(gX, gY);
+      ctx.strokeStyle = stato.saturo ? "rgba(245,109,138,.55)" : "rgba(94,232,164,.5)";
+      ctx.lineWidth = 1.6; ctx.setLineDash([3,6]); ctx.lineDashOffset = -t*22; ctx.stroke();
+      ctx.setLineDash([]); ctx.lineDashOffset = 0;
+      if(!REDUCED && glifi.length < 26 && Math.random() < .5) glifi.push({p:0, v:.006+Math.random()*.012});
+      const GL = "01アキサネ◉";
+      ctx.font = "11px monospace";
+      glifi = glifi.filter(g => {
+        g.p += g.v;
+        if(g.p >= 1) return false;
+        const x = sorgente[0] + (gX - sorgente[0])*g.p, y = sorgente[1] + (gY - sorgente[1])*g.p;
+        ctx.fillStyle = stato.saturo ? "rgba(245,109,138,.85)" : "rgba(82,224,240,.85)";
+        ctx.fillText(GL[(g.p*37|0) % GL.length], x, y);
+        return true;
+      });
+      ctx.beginPath(); ctx.arc(gX, gY, 4.5, 0, 7);
+      ctx.fillStyle = "#eafcff"; ctx.fill();
+    } else {
+      glifi = [];
+    }
+    ctx.font = "10px monospace"; ctx.fillStyle = "rgba(125,118,168,.9)";
+    ctx.fillText("stazione di terra", gX + 12, gY + 18);
+  }
+
+  /* ── apertura / chiusura ── */
+  function apri(){
+    panel.classList.add("open"); aperto = true;
+    ridimensiona(); calcola(); pittaBeat(); avvia();
+    if(raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(disegna);
+    if(REDUCED) disegna(0);
+  }
+  function chiudi(){
+    panel.classList.remove("open"); aperto = false;
+    if(raf){ cancelAnimationFrame(raf); raf = null; }
+  }
+  window.eogJSpace = apri;
+  $("jsClose").addEventListener("click", chiudi);
+  const btn = document.getElementById("openJspace");
+  if(btn) btn.addEventListener("click", apri);
+  addEventListener("keydown", e => { if(e.key === "Escape" && aperto) chiudi(); });
+  addEventListener("resize", ()=>{ if(aperto){ ridimensiona(); if(REDUCED) disegna(0); } });
+  ["jsN","jsAcc","jsRaw","jsDown","jsAvail","jsFront"].forEach(id =>
+    $(id).addEventListener("input", calcola));
+  calcola();
+})();
+
 </script>
 </html>
